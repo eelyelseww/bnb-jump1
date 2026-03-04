@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BNB Jump - Collect & Earn Real Tokens</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
+
+  :root {
+    --bnb-gold: #F0B90B;
+    --bnb-dark: #0B0E11;
+    --bnb-darker: #060810;
+    --bnb-glow: rgba(240,185,11,0.6);
+    --bnb-text: #E8D48A;
+    --platform-color: #1A2332;
+    --platform-border: #2A4A7F;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bnb-darker);
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--bnb-text);
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 15%, rgba(240,185,11,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 5%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 20%, rgba(240,185,11,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 8%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 18%, rgba(240,185,11,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 40%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 35%, rgba(240,185,11,0.3) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Wallet UI */
+  #wallet-ui {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, #060810 0%, #0D1B2A 50%, #060810 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    gap: 20px;
+  }
+
+  .logo-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--bnb-gold);
+    text-shadow: 0 0 40px var(--bnb-glow), 0 0 80px rgba(240,185,11,0.3);
+    letter-spacing: 4px;
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%,100% { text-shadow: 0 0 40px var(--bnb-glow), 0 0 80px rgba(240,185,11,0.3); }
+    50% { text-shadow: 0 0 60px var(--bnb-glow), 0 0 120px rgba(240,185,11,0.5); }
+  }
+
+  .bnb-coin-logo {
+    width: 90px; height: 90px;
+    background: radial-gradient(circle at 35% 35%, #FFD700, #F0B90B, #C8960C);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--bnb-dark);
+    box-shadow: 0 0 40px var(--bnb-glow), 0 8px 32px rgba(0,0,0,0.6);
+    animation: spin-coin 4s linear infinite;
+  }
+
+  @keyframes spin-coin {
+    0% { transform: rotateY(0deg); }
+    100% { transform: rotateY(360deg); }
+  }
+
+  .subtitle { font-size: 1rem; color: rgba(232,212,138,0.6); letter-spacing: 3px; text-transform: uppercase; }
+
+  .info-box {
+    background: rgba(240,185,11,0.07);
+    border: 1px solid rgba(240,185,11,0.2);
+    border-radius: 10px;
+    padding: 16px 28px;
+    text-align: center;
+    width: 320px;
+  }
+
+  .info-box .label { font-size: 0.65rem; letter-spacing: 3px; color: rgba(232,212,138,0.5); text-transform: uppercase; margin-bottom: 4px; }
+  .info-box .value { font-family: 'Orbitron', monospace; font-size: 1rem; color: var(--bnb-gold); }
+
+  .connect-btn {
+    background: linear-gradient(135deg, #F0B90B, #C8960C);
+    color: #000;
+    border: none;
+    padding: 16px 48px;
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px var(--bnb-glow);
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+  .connect-btn:hover { transform: translateY(-3px); box-shadow: 0 0 40px var(--bnb-glow); }
+  .connect-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .note { font-size: 0.75rem; color: rgba(232,212,138,0.35); text-align: center; max-width: 320px; line-height: 1.8; }
+
+  /* HUD */
+  #hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: linear-gradient(180deg, rgba(6,8,16,0.95) 0%, transparent 100%);
+    z-index: 50;
+    border-bottom: 1px solid rgba(240,185,11,0.12);
+  }
+
+  .hud-item { display: flex; flex-direction: column; align-items: center; }
+  .hud-label { font-size: 0.6rem; letter-spacing: 3px; color: rgba(232,212,138,0.5); text-transform: uppercase; }
+  .hud-value { font-family: 'Orbitron', monospace; font-size: 1.3rem; font-weight: 700; color: var(--bnb-gold); text-shadow: 0 0 10px var(--bnb-glow); }
+
+  .wallet-badge {
+    background: rgba(240,185,11,0.1);
+    border: 1px solid rgba(240,185,11,0.3);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    color: var(--bnb-gold);
+    cursor: pointer;
+  }
+
+  canvas {
+    display: block;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  /* Game container */
+  #game-container { display: none; width: 100%; height: 100vh; }
+
+  /* Overlays */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 60;
+    background: rgba(6,8,16,0.88);
+    backdrop-filter: blur(8px);
+    gap: 18px;
+  }
+  .overlay.active { display: flex; }
+
+  .overlay-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--bnb-gold);
+    text-shadow: 0 0 30px var(--bnb-glow);
+    text-align: center;
+  }
+
+  .score-display {
+    font-family: 'Orbitron', monospace;
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--bnb-gold);
+    text-shadow: 0 0 40px var(--bnb-glow);
+  }
+
+  .reward-box {
+    background: rgba(240,185,11,0.08);
+    border: 1px solid rgba(240,185,11,0.3);
+    border-radius: 12px;
+    padding: 16px 32px;
+    text-align: center;
+    min-width: 280px;
+  }
+
+  .reward-label { font-size: 0.7rem; letter-spacing: 3px; color: rgba(232,212,138,0.5); text-transform: uppercase; }
+  .reward-amount { font-family: 'Orbitron', monospace; font-size: 1.8rem; font-weight: 900; color: #7CFC00; text-shadow: 0 0 20px rgba(124,252,0,0.5); margin-top: 4px; }
+  .reward-sub { font-size: 0.8rem; color: rgba(232,212,138,0.5); margin-top: 4px; }
+
+  .action-btn {
+    background: linear-gradient(135deg, #F0B90B, #C8960C);
+    color: #000;
+    border: none;
+    padding: 14px 40px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px var(--bnb-glow);
+    text-transform: uppercase;
+  }
+  .action-btn:hover { transform: translateY(-2px); }
+  .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .claim-btn {
+    background: linear-gradient(135deg, #00C853, #009624);
+    color: #fff;
+    border: none;
+    padding: 14px 40px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px rgba(0,200,83,0.4);
+    text-transform: uppercase;
+  }
+  .claim-btn:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(0,200,83,0.6); }
+  .claim-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+  .overlay-sub { font-size: 1rem; color: rgba(232,212,138,0.6); text-align: center; }
+  .overlay-note { font-size: 0.75rem; color: rgba(232,212,138,0.35); text-align: center; max-width: 320px; line-height: 1.7; }
+
+  .controls-info { font-size: 0.8rem; color: rgba(232,212,138,0.4); text-align: center; line-height: 2; letter-spacing: 1px; }
+
+  /* Mobile controls */
+  #mobile-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    z-index: 55;
+  }
+
+  .ctrl-btn {
+    width: 65px; height: 65px;
+    background: rgba(240,185,11,0.1);
+    border: 2px solid rgba(240,185,11,0.3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ctrl-btn:active { background: rgba(240,185,11,0.3); border-color: var(--bnb-gold); transform: scale(0.92); }
+
+  #toast {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(6,8,16,0.9);
+    border: 1px solid rgba(240,185,11,0.4);
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    color: var(--bnb-gold);
+    z-index: 200;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.green { border-color: rgba(0,200,83,0.5); color: #7CFC00; }
+  #toast.red { border-color: rgba(255,68,68,0.5); color: #FF6B6B; }
+
+  .tx-link {
+    font-size: 0.7rem;
+    color: rgba(240,185,11,0.6);
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: -8px;
+  }
+  .tx-link:hover { color: var(--bnb-gold); }
+</style>
+</head>
+<body>
+
+<!-- ───────────── WALLET SCREEN ───────────── -->
+<div id="wallet-ui">
+  <div class="bnb-coin-logo">BNB</div>
+  <div class="logo-title">BNB JUMP</div>
+  <div class="subtitle">Play · Collect · Earn Real Tokens</div>
+
+  <div class="info-box" id="wallet-info-box" style="display:none">
+    <div class="label">Wallet Connected</div>
+    <div class="value" id="display-addr">0x0000...0000</div>
+    <div style="margin-top:8px">
+      <div class="label">Token Balance</div>
+      <div class="value" id="display-token-balance">0 TOKEN</div>
+    </div>
+    <div style="margin-top:8px">
+      <div class="label">Reward Pool</div>
+      <div class="value" id="display-pool">Loading...</div>
+    </div>
+  </div>
+
+  <button class="connect-btn" id="connect-btn" onclick="connectWallet()">🦊 Connect MetaMask</button>
+
+  <div class="note">
+    ⚠️ ต้องตั้งค่า Contract Address ก่อนใช้งานจริง<br>
+    ดูวิธี Deploy Contract ในไฟล์ BNBJumpReward.sol
+  </div>
+</div>
+
+<!-- ───────────── GAME ───────────── -->
+<div id="game-container">
+  <div id="hud">
+    <div class="hud-item">
+      <div class="hud-label">เหรียญ</div>
+      <div class="hud-value" id="hud-score">0</div>
+    </div>
+    <div class="wallet-badge" id="hud-addr">0x...0000</div>
+    <div class="hud-item">
+      <div class="hud-label">สถิติ</div>
+      <div class="hud-value" id="hud-high">0</div>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Start -->
+  <div class="overlay active" id="start-overlay">
+    <div class="overlay-title">BNB JUMP</div>
+    <div class="overlay-sub">กระโดดเก็บเหรียญ → Claim Token จริง!</div>
+    <button class="action-btn" onclick="startGame()">▶ เริ่มเกม</button>
+    <div class="controls-info">⬅ ➡ เดิน &nbsp;|&nbsp; SPACE / ↑ กระโดด (2x)<br>หลีกเลี่ยงหนาม 🔺</div>
+  </div>
+
+  <!-- Game Over + Claim -->
+  <div class="overlay" id="gameover-overlay">
+    <div class="overlay-title">GAME OVER</div>
+    <div class="hud-label">เหรียญที่เก็บได้</div>
+    <div class="score-display" id="final-score">0</div>
+
+    <div class="reward-box">
+      <div class="reward-label">รางวัลที่จะได้รับ</div>
+      <div class="reward-amount" id="reward-amount">0 TOKEN</div>
+      <div class="reward-sub" id="reward-sub">1 เหรียญ = 1 TOKEN (สูงสุด 100)</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="claim-btn" id="claim-btn" onclick="claimReward()">🎁 Claim Token</button>
+      <button class="action-btn" onclick="startGame()">🔄 เล่นอีกรอบ</button>
+    </div>
+
+    <div id="tx-result" style="display:none">
+      <div style="color:#7CFC00; font-family:'Orbitron',monospace; font-size:0.8rem; text-align:center;">✅ Claim สำเร็จ!</div>
+      <div class="tx-link" id="tx-link" onclick="openTx()">ดู Transaction บน BscScan →</div>
+    </div>
+
+    <div class="overlay-note" id="claim-note">
+      ต้องรอ 60 วินาทีระหว่างการ claim แต่ละครั้ง
+    </div>
+  </div>
+
+  <!-- Mobile Controls -->
+  <div id="mobile-controls">
+    <div class="ctrl-btn" ontouchstart="mobileLeft(true)" ontouchend="mobileLeft(false)">◀</div>
+    <div class="ctrl-btn" ontouchstart="mobileJump()">▲</div>
+    <div class="ctrl-btn" ontouchstart="mobileRight(true)" ontouchend="mobileRight(false)">▶</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG — แก้ตรงนี้หลัง deploy contract แล้ว
+// ══════════════════════════════════════════════
+const TOKEN_CONTRACT = '0x8aeEf6fc962531d0910B78EA6D87E92fE0fbc261';
+const REWARD_CONTRACT = 'YOUR_REWARD_CONTRACT_ADDRESS'; // ← ใส่หลัง deploy
+const TOKEN_DECIMALS = 18;
+const TOKEN_SYMBOL = 'TOKEN'; // ← เปลี่ยนเป็นชื่อ token ของคุณ
+const BSC_CHAIN_ID = '0x38';
+
+// ABI ขั้นต่ำที่ต้องการ
+const ERC20_ABI = [
+  'function balanceOf(address) view returns (uint256)',
+  'function symbol() view returns (string)',
+  'function decimals() view returns (uint8)',
+];
+
+const REWARD_ABI = [
+  { name: 'claimReward', type: 'function', inputs: [{ name: 'coinsCollected', type: 'uint256' }], outputs: [], stateMutability: 'nonpayable' },
+  { name: 'canClaim', type: 'function', inputs: [{ name: 'player', type: 'address' }], outputs: [{ type: 'bool' }, { type: 'uint256' }], stateMutability: 'view' },
+  { name: 'poolBalance', type: 'function', inputs: [], outputs: [{ type: 'uint256' }], stateMutability: 'view' },
+  { name: 'rewardPerCoin', type: 'function', inputs: [], outputs: [{ type: 'uint256' }], stateMutability: 'view' },
+  { name: 'maxRewardPerRound', type: 'function', inputs: [], outputs: [{ type: 'uint256' }], stateMutability: 'view' },
+];
+
+// ══════════════════════════════════════════════
+// WALLET & CONTRACT
+// ══════════════════════════════════════════════
+let walletAddress = null;
+let tokenSymbol = TOKEN_SYMBOL;
+let rewardPerCoin = 1;
+let maxReward = 100;
+let lastTxHash = null;
+let contractReady = REWARD_CONTRACT !== 'YOUR_REWARD_CONTRACT_ADDRESS';
+
+async function connectWallet() {
+  const btn = document.getElementById('connect-btn');
+  if (typeof window.ethereum === 'undefined') {
+    showToast('❌ ไม่พบ MetaMask!', 'red');
+    window.open('https://metamask.io', '_blank');
+    return;
+  }
+  try {
+    btn.textContent = '⏳ กำลังเชื่อมต่อ...';
+    btn.disabled = true;
+
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    walletAddress = accounts[0];
+
+    // Switch to BSC
+    try {
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BSC_CHAIN_ID }] });
+    } catch (e) {
+      if (e.code === 4902) {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{ chainId: BSC_CHAIN_ID, chainName: 'BNB Smart Chain', nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 }, rpcUrls: ['https://bsc-dataseed.binance.org/'], blockExplorerUrls: ['https://bscscan.com/'] }]
+        });
+      }
+    }
+
+    const short = walletAddress.slice(0,6) + '...' + walletAddress.slice(-4);
+    document.getElementById('hud-addr').textContent = short;
+    document.getElementById('display-addr').textContent = short;
+    document.getElementById('wallet-info-box').style.display = 'block';
+
+    await loadTokenInfo();
+
+    btn.textContent = '▶ เข้าเกม!';
+    btn.disabled = false;
+    btn.onclick = enterGame;
+    showToast('✅ เชื่อมต่อสำเร็จ!', 'green');
+  } catch (err) {
+    btn.textContent = '🦊 Connect MetaMask';
+    btn.disabled = false;
+    showToast('❌ ' + (err.message || 'เชื่อมต่อล้มเหลว'), 'red');
+  }
+}
+
+async function rpcCall(contractAddr, data) {
+  const res = await window.ethereum.request({
+    method: 'eth_call',
+    params: [{ to: contractAddr, data }, 'latest']
+  });
+  return res;
+}
+
+function encodeCall(sig) {
+  // simple 4-byte selector (keccak not available natively, use hardcoded for common ones)
+  const selectors = {
+    'balanceOf(address)': '0x70a08231',
+    'symbol()': '0x95d89b41',
+    'decimals()': '0x313ce567',
+    'poolBalance()': '0x96e3bf4f',
+    'rewardPerCoin()': '0x0f9b21e9',
+    'maxRewardPerRound()': '0x8e27d719',
+    'canClaim(address)': '0x71acdbcb',
+  };
+  return selectors[sig] || null;
+}
+
+function padAddress(addr) {
+  return addr.replace('0x', '').padStart(64, '0');
+}
+
+function hexToDecimal(hex) {
+  return BigInt(hex) ;
+}
+
+async function loadTokenInfo() {
+  try {
+    // Get token symbol
+    const symHex = await rpcCall(TOKEN_CONTRACT, '0x95d89b41');
+    // decode string: skip offset and length
+    const symData = symHex.slice(2);
+    const offset = parseInt(symData.slice(0, 64), 16) * 2;
+    const len = parseInt(symData.slice(64, 128), 16);
+    tokenSymbol = Buffer ? 
+      Buffer.from(symData.slice(128, 128 + len*2), 'hex').toString() :
+      decodeSymbol(symData.slice(128, 128 + len*2));
+    document.getElementById('display-token-balance').textContent = '... ' + tokenSymbol;
+
+    // Get token balance
+    const balHex = await rpcCall(TOKEN_CONTRACT, '0x70a08231' + padAddress(walletAddress));
+    const bal = Number(hexToDecimal(balHex)) / 10**TOKEN_DECIMALS;
+    document.getElementById('display-token-balance').textContent = bal.toFixed(2) + ' ' + tokenSymbol;
+
+    if (contractReady) {
+      // Get pool balance
+      const poolHex = await rpcCall(REWARD_CONTRACT, '0x96e3bf4f');
+      const pool = Number(hexToDecimal(poolHex)) / 10**TOKEN_DECIMALS;
+      document.getElementById('display-pool').textContent = pool.toFixed(0) + ' ' + tokenSymbol;
+
+      // Get reward per coin
+      const rpcHex = await rpcCall(REWARD_CONTRACT, '0x0f9b21e9');
+      rewardPerCoin = Number(hexToDecimal(rpcHex)) / 10**TOKEN_DECIMALS;
+
+      // Get max reward
+      const maxHex = await rpcCall(REWARD_CONTRACT, '0x8e27d719');
+      maxReward = Number(hexToDecimal(maxHex)) / 10**TOKEN_DECIMALS;
+    } else {
+      document.getElementById('display-pool').textContent = 'ยังไม่ได้ Deploy Contract';
+    }
+  } catch(e) {
+    console.warn('loadTokenInfo error:', e);
+    document.getElementById('display-pool').textContent = 'ไม่สามารถโหลดข้อมูลได้';
+  }
+}
+
+function decodeSymbol(hex) {
+  let str = '';
+  for (let i = 0; i < hex.length; i += 2) {
+    const code = parseInt(hex.substr(i, 2), 16);
+    if (code > 0) str += String.fromCharCode(code);
+  }
+  return str;
+}
+
+async function claimReward() {
+  if (!contractReady) {
+    showToast('⚠️ ยังไม่ได้ Deploy Reward Contract!', 'red');
+    return;
+  }
+  if (!walletAddress) return;
+
+  const btn = document.getElementById('claim-btn');
+  const coins = score;
+  if (coins === 0) {
+    showToast('⚠️ ไม่มีเหรียญที่จะ Claim', 'red');
+    return;
+  }
+
+  try {
+    btn.disabled = true;
+    btn.textContent = '⏳ กำลัง Claim...';
+
+    // Encode claimReward(uint256) = 0x6a627842... 
+    // selector for claimReward(uint256)
+    const selector = '0x4e71d92d'; // will compute properly below
+    // Actually encode properly:
+    const fnSelector = '0x' + computeSelector('claimReward(uint256)');
+    const coinsHex = BigInt(coins).toString(16).padStart(64, '0');
+    const data = fnSelector + coinsHex;
+
+    const txHash = await window.ethereum.request({
+      method: 'eth_sendTransaction',
+      params: [{
+        from: walletAddress,
+        to: REWARD_CONTRACT,
+        data: data,
+        gas: '0x30D40', // 200000
+      }]
+    });
+
+    lastTxHash = txHash;
+    document.getElementById('tx-result').style.display = 'block';
+    document.getElementById('tx-link').textContent = txHash.slice(0,20) + '... → BscScan';
+    showToast('✅ Claim สำเร็จ! รอ Confirm บน Chain', 'green');
+    btn.textContent = '✅ Claimed!';
+
+    // Reload balance after 3s
+    setTimeout(loadTokenInfo, 3000);
+
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = '🎁 Claim Token';
+    if (err.code === 4001) {
+      showToast('❌ ยกเลิกการ Claim', 'red');
+    } else {
+      showToast('❌ ' + (err.message?.slice(0,40) || 'Claim ล้มเหลว'), 'red');
+    }
+  }
+}
+
+function computeSelector(sig) {
+  // Pre-computed keccak256 selectors
+  const known = {
+    'claimReward(uint256)': 'c5ebeaec',
+  };
+  return known[sig] || 'c5ebeaec';
+}
+
+function openTx() {
+  if (lastTxHash) {
+    window.open('https://bscscan.com/tx/' + lastTxHash, '_blank');
+  }
+}
+
+function enterGame() {
+  document.getElementById('wallet-ui').style.display = 'none';
+  document.getElementById('game-container').style.display = 'block';
+  initGame();
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+let toastTimeout;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// ══════════════════════════════════════════════
+// GAME ENGINE
+// ══════════════════════════════════════════════
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, gameState = 'idle', score = 0, highScore = 0, animId;
+
+const PLAYER = { x:0,y:0,w:36,h:44,vx:0,vy:0,onGround:false,jumping:false,facing:1,jumpCount:0 };
+const GRAVITY = 0.55, JUMP_FORCE = -14, SPEED = 5;
+
+let platforms=[], coins=[], spikes=[], particles=[], cameraX=0, lastPlatformX=0;
+const keys={}, mobileKeys={left:false,right:false,jump:false};
+
+function resize() { W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+
+function initGame() {
+  resize(); score=0; cameraX=0; platforms=[]; coins=[]; spikes=[]; particles=[];
+  document.getElementById('hud-score').textContent='0';
+  document.getElementById('tx-result').style.display='none';
+  const gY=H*0.78;
+  platforms.push({x:-200,y:gY,w:800,h:20,type:'ground'});
+  PLAYER.x=W*0.2; PLAYER.y=gY-PLAYER.h; PLAYER.vx=0; PLAYER.vy=0;
+  PLAYER.onGround=true; PLAYER.jumpCount=0; PLAYER.facing=1;
+  lastPlatformX=600; generateWorld();
+}
+
+function generateWorld() {
+  const gY=H*0.78;
+  while(lastPlatformX < cameraX+W*3) {
+    const gap=160+Math.random()*200, pw=80+Math.random()*160;
+    const py=gY-80-Math.random()*180, px=lastPlatformX+gap;
+    platforms.push({x:px,y:py,w:pw,h:16,type:'float'});
+    const nc=1+Math.floor(Math.random()*3);
+    for(let i=0;i<nc;i++) coins.push({x:px+20+i*28,y:py-28,r:13,collected:false,anim:Math.random()*Math.PI*2});
+    if(Math.random()<0.35&&pw>80) spikes.push({x:px+20+Math.random()*(pw-40),y:py-16,size:16});
+    lastPlatformX=px+pw;
+  }
+}
+
+function startGame() {
+  document.getElementById('start-overlay').classList.remove('active');
+  document.getElementById('gameover-overlay').classList.remove('active');
+  gameState='running';
+  const claimBtn=document.getElementById('claim-btn');
+  claimBtn.disabled=false; claimBtn.textContent='🎁 Claim Token';
+  if(animId) cancelAnimationFrame(animId);
+  initGame(); loop();
+}
+
+function gameOver() {
+  gameState='dead';
+  if(score>highScore){highScore=score; document.getElementById('hud-high').textContent=highScore;}
+  document.getElementById('final-score').textContent=score;
+  const reward=Math.min(score*rewardPerCoin, maxReward);
+  document.getElementById('reward-amount').textContent=reward.toFixed(2)+' '+tokenSymbol;
+  if(!contractReady) {
+    document.getElementById('claim-note').textContent='⚠️ Deploy Reward Contract ก่อน จึงจะ Claim ได้จริง';
+    document.getElementById('claim-btn').textContent='⚠️ ยังไม่พร้อม';
+    document.getElementById('claim-btn').disabled=true;
+  }
+  document.getElementById('gameover-overlay').classList.add('active');
+}
+
+function update() {
+  if(gameState!=='running') return;
+  const gY=H*0.78;
+  const goL=keys['ArrowLeft']||keys['a']||keys['A']||mobileKeys.left;
+  const goR=keys['ArrowRight']||keys['d']||keys['D']||mobileKeys.right;
+  const doJ=keys['ArrowUp']||keys[' ']||keys['w']||keys['W']||mobileKeys.jump;
+  if(goL){PLAYER.vx=-SPEED;PLAYER.facing=-1;}
+  else if(goR){PLAYER.vx=SPEED;PLAYER.facing=1;}
+  else PLAYER.vx*=0.8;
+  if(doJ&&!PLAYER.jumping&&PLAYER.jumpCount<2){
+    PLAYER.vy=JUMP_FORCE*(PLAYER.jumpCount===1?0.85:1);
+    PLAYER.jumping=true; PLAYER.onGround=false; PLAYER.jumpCount++;
+    spawnJumpPart();
+  }
+  if(!doJ) PLAYER.jumping=false;
+  PLAYER.vy+=GRAVITY; PLAYER.x+=PLAYER.vx; PLAYER.y+=PLAYER.vy;
+  cameraX+=(PLAYER.x-W*0.3-cameraX)*0.12;
+  PLAYER.onGround=false;
+  for(const p of platforms){
+    const px=p.x-cameraX;
+    if(PLAYER.x+PLAYER.w>px&&PLAYER.x<px+p.w&&PLAYER.y+PLAYER.h>p.y&&PLAYER.y+PLAYER.h<p.y+p.h+12&&PLAYER.vy>=0){
+      PLAYER.y=p.y-PLAYER.h; PLAYER.vy=0; PLAYER.onGround=true; PLAYER.jumpCount=0;
+    }
+  }
+  if(PLAYER.y+PLAYER.h>=gY){PLAYER.y=gY-PLAYER.h;PLAYER.vy=0;PLAYER.onGround=true;PLAYER.jumpCount=0;}
+  for(const c of coins){
+    if(c.collected) continue;
+    const cx=c.x-cameraX;
+    if(Math.hypot(PLAYER.x+PLAYER.w/2-cx,PLAYER.y+PLAYER.h/2-c.y)<c.r+22){
+      c.collected=true; score++;
+      document.getElementById('hud-score').textContent=score;
+      spawnCoinPart(cx,c.y); showToast('🪙 +1 '+tokenSymbol);
+    }
+    c.anim+=0.06;
+  }
+  for(const s of spikes){
+    const sx=s.x-cameraX;
+    if(PLAYER.x+PLAYER.w-4>sx-s.size/2&&PLAYER.x+4<sx+s.size/2&&PLAYER.y+PLAYER.h>s.y&&PLAYER.y<s.y+s.size){gameOver();return;}
+  }
+  if(PLAYER.y>H+100||PLAYER.x<cameraX-100){gameOver();return;}
+  generateWorld();
+  particles=particles.filter(p=>p.life>0);
+  for(const p of particles){p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life--;p.alpha=p.life/p.maxLife;}
+}
+
+function draw() {
+  ctx.clearRect(0,0,W,H);
+  const sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#060810'); sky.addColorStop(0.6,'#0D1B2A'); sky.addColorStop(1,'#0B1620');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
+  drawStars();
+  const gY=H*0.78;
+  const gg=ctx.createLinearGradient(0,gY,0,H);
+  gg.addColorStop(0,'#1A2332'); gg.addColorStop(1,'#0D1320');
+  ctx.fillStyle=gg; ctx.fillRect(0,gY,W,H-gY);
+  ctx.fillStyle='rgba(240,185,11,0.4)'; ctx.fillRect(0,gY,W,2);
+  for(const p of platforms){
+    const px=p.x-cameraX;
+    if(px>W+50||px+p.w<-50||p.type==='ground') continue;
+    ctx.shadowColor='rgba(240,185,11,0.3)'; ctx.shadowBlur=12;
+    const pg=ctx.createLinearGradient(px,p.y,px,p.y+p.h);
+    pg.addColorStop(0,'#2A4A7F'); pg.addColorStop(1,'#1A2A4A');
+    ctx.fillStyle=pg; ctx.beginPath(); ctx.roundRect(px,p.y,p.w,p.h,4); ctx.fill();
+    ctx.shadowBlur=0; ctx.strokeStyle='rgba(240,185,11,0.5)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.roundRect(px,p.y,p.w,p.h,4); ctx.stroke();
+  }
+  const now=Date.now()/1000;
+  for(const c of coins){
+    if(c.collected) continue;
+    const cx=c.x-cameraX;
+    if(cx<-30||cx>W+30) continue;
+    const hv=Math.sin(c.anim+now*2)*4;
+    ctx.save(); ctx.shadowColor='rgba(240,185,11,0.8)'; ctx.shadowBlur=20;
+    const cg=ctx.createRadialGradient(cx-c.r*0.3,c.y+hv-c.r*0.3,1,cx,c.y+hv,c.r);
+    cg.addColorStop(0,'#FFE55C'); cg.addColorStop(0.6,'#F0B90B'); cg.addColorStop(1,'#B8860B');
+    ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(cx,c.y+hv,c.r,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.fillStyle='#0B0E11';
+    ctx.font=`bold ${c.r*0.75}px Orbitron,monospace`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('B',cx,c.y+hv+1); ctx.restore();
+  }
+  for(const s of spikes){
+    const sx=s.x-cameraX;
+    if(sx<-30||sx>W+30) continue;
+    ctx.save(); ctx.shadowColor='#FF4444'; ctx.shadowBlur=10; ctx.fillStyle='#FF4444';
+    ctx.beginPath(); ctx.moveTo(sx,s.y); ctx.lineTo(sx-s.size/2,s.y+s.size); ctx.lineTo(sx+s.size/2,s.y+s.size); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+  for(const p of particles){
+    ctx.save(); ctx.globalAlpha=p.alpha; ctx.fillStyle=p.color; ctx.shadowColor=p.color; ctx.shadowBlur=6;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill(); ctx.restore();
+  }
+  drawPlayer();
+}
+
+let starCache=null;
+function drawStars() {
+  if(!starCache){starCache=[];for(let i=0;i<100;i++)starCache.push({x:Math.random(),y:Math.random()*0.7,r:0.5+Math.random()*1.5,b:0.2+Math.random()*0.6,g:Math.random()<0.3});}
+  for(const s of starCache){
+    const tw=0.5+0.5*Math.sin(Date.now()/1000*2+s.x*100);
+    ctx.fillStyle=s.g?`rgba(240,185,11,${s.b*tw})`:`rgba(200,220,255,${s.b*tw})`;
+    ctx.beginPath(); ctx.arc(s.x*W,s.y*H,s.r,0,Math.PI*2); ctx.fill();
+  }
+}
+
+function drawPlayer() {
+  const {x,y,w,h,facing}=PLAYER;
+  ctx.save(); ctx.translate(x+w/2,y+h/2); ctx.scale(facing,1);
+  ctx.shadowColor='rgba(240,185,11,0.6)'; ctx.shadowBlur=20;
+  const bg=ctx.createLinearGradient(-w/2,-h/2,w/2,h/2);
+  bg.addColorStop(0,'#F0B90B'); bg.addColorStop(1,'#C8960C');
+  ctx.fillStyle=bg; ctx.beginPath(); ctx.roundRect(-w/2+4,-h/2+10,w-8,h-10,6); ctx.fill();
+  ctx.fillStyle='#F0B90B'; ctx.beginPath(); ctx.ellipse(0,-h/2+6,w/2-2,14,0,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0; ctx.fillStyle='#0B0E11'; ctx.beginPath(); ctx.ellipse(8,-h/2+4,5,5,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(10,-h/2+2,2,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#0B0E11'; ctx.font='bold 9px Orbitron,monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('BNB',0,4);
+  const la=PLAYER.onGround?Math.sin(Date.now()/120)*8:0;
+  ctx.fillStyle='#C8960C'; ctx.fillRect(-w/2+6,h/2-14,10,14+la); ctx.fillRect(w/2-16,h/2-14,10,14-la);
+  ctx.restore();
+}
+
+function spawnCoinPart(cx,cy){for(let i=0;i<10;i++){const a=(Math.PI*2*i)/10;particles.push({x:cx,y:cy,vx:Math.cos(a)*(2+Math.random()*3),vy:Math.sin(a)*(2+Math.random()*3)-2,life:30,maxLife:30,color:Math.random()<0.5?'#F0B90B':'#FFE55C',size:2+Math.random()*4,alpha:1});}}
+function spawnJumpPart(){for(let i=0;i<6;i++)particles.push({x:PLAYER.x+PLAYER.w/2+(Math.random()-0.5)*20,y:PLAYER.y+PLAYER.h,vx:(Math.random()-0.5)*3,vy:1+Math.random()*2,life:20,maxLife:20,color:'rgba(240,185,11,0.7)',size:3+Math.random()*3,alpha:1});}
+
+function loop(){update();draw();animId=requestAnimationFrame(loop);}
+
+document.addEventListener('keydown',e=>{keys[e.key]=true;});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+window.addEventListener('resize',resize);
+function mobileLeft(v){mobileKeys.left=v;}
+function mobileRight(v){mobileKeys.right=v;}
+function mobileJump(){mobileKeys.jump=true;setTimeout(()=>{mobileKeys.jump=false;},150);}
+</script>
+</body>
+</html>
